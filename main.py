@@ -54,3 +54,13 @@ def write_result_to_file(rdd, filename):
         f.write("\n".join(rdd))
 
 # Task 4
+
+def album_per_artist(rdd):
+    return(rdd
+           .map(lambda line: split_and_map(line, album_headers))
+           .groupBy(lambda artist: artist["artist_id"])
+           .mapValues(list)
+           .mapValues(len)
+           .sortBy(lambda x: int(x[0]))
+           .sortBy(lambda x: -x[1])
+           .collect())
