@@ -20,34 +20,30 @@ def split_and_map(line, header):
 # Task 1
 
 def get_all_genres(rdd):
-    return rdd \
-        .map(lambda line: split_and_map(line, album_headers)) \
-        .map(lambda album: album["genre"]) \
-        .distinct() \
-        .collect()
+    return(rdd
+        .map(lambda line: split_and_map(line, album_headers))
+        .map(lambda album: album["genre"])
+        .distinct()
+        .collect())
 
 # Task 2
 
 def get_oldest_artist_birth_year(rdd):
-    return  rdd \
-      .map(lambda line: split_and_map(line, artist_headers)) \
-      .map(lambda artist: artist["year_of_birth"]) \
-      .max()
-    
-    print(result)
+    return(rdd
+      .map(lambda line: split_and_map(line, artist_headers))
+      .map(lambda artist: artist["year_of_birth"])
+      .max())
 
 # Task 3
 
 def get_amount_of_artists_by_country(rdd):
-    result = rdd \
-      .map(lambda line: split_and_map(line, artist_headers)) \
-      .map(lambda artist: (artist["country"], 1)) \
-      .reduceByKey(add) \
-      .sortByKey() \
-      .sortBy(ascending=False, keyfunc=lambda t: t[1]) \
-      .map(lambda t: '{0}\t{1}'.format(t[0], t[1]))
-        
-    return result.collect()
+    return(rdd
+      .map(lambda line: split_and_map(line, artist_headers))
+      .map(lambda artist: (artist["country"], 1))
+      .reduceByKey(add)
+      .sortByKey()
+      .sortBy(ascending=False, keyfunc=lambda t: t[1])
+      .map(lambda t: '{0}\t{1}'.format(t[0], t[1])))
 
 def write_result_to_file(rdd, filename):
     with open('result/{}'.format(filename), 'w') as f:
