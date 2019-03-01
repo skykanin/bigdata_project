@@ -37,7 +37,7 @@ into it.
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-
+n
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -115,3 +115,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# DS shit
+.DS_Store
