@@ -7,8 +7,8 @@ CONF = SparkConf().setAppName("main").setMaster("local[*]")
 SC = SparkContext(conf=CONF)
 
 ALBUM_HEADERS = ["id", "artist_id", "album_title", "genre", "year_of_pub"
-                 , "num_of_tracks", "num_of_sales", "rolling_stone_critic", "mtv_critic"
-                 , "music_maniac_critic"]
+                 , "num_of_tracks", "num_of_sales", "rolling_stone_critic",
+                 "mtv_critic", "music_maniac_critic"]
 
 ARTIST_HEADERS = ["id", "real_name", "art_name", "role", "year_of_birth"
                   , "country", "city", "email", "zip_code"]
@@ -135,6 +135,7 @@ def best_average_critic_and_country(album_rdd, artist_rdd):
            .collect())
 
 # Task 8
+
 def artist_with_highest_album(album_rdd, artist_rdd):
     '''Returns sorted list of strings containing artists with highest mtv_critic score'''
     albums = album_rdd.map(
@@ -148,4 +149,24 @@ def artist_with_highest_album(album_rdd, artist_rdd):
            .map(lambda t: t[1][1])
            .distinct()
            .sortBy(identity)
+           .collect())
+
+# Task 9
+
+def average_artist_critic_norway(album_rdd, artist_rdd):
+    '''Returns sorted list of average artist score for all norwegian artists'''
+    artists = artist_rdd \
+      .filter(lambda artist: artist["country"] == "Norway") \
+      .map(lambda artist: (int(artist["id"]), artist["art_name"]))
+
+    albums = album_rdd.map(lambda album: (int(album["artist_id"]), float(album["mtv_critic"])))
+
+    point = albums.join(artists).groupByKey().mapValues(len)
+
+    return(albums
+           .join(artists)
+           .reduceByKey(lambda a, b: (a[0] + b[0], a[1]))
+           .join(point)
+           .mapValues(list)
+           .map(lambda t: [t[1][0][1], "Norway", t[1][0][0]/t[1][1]])
            .collect())
