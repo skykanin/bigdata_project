@@ -179,27 +179,35 @@ ARTIST_DF = SPARK.createDataFrame(ARTIST_RDD)
 
 # Task 10
 def get_distict_artists(df):
-    return(df.agg(approx_count_distinct(df.id).alias("distinct_artists")).show())
+    '''Get amount of distinct artists'''
+    return df.agg(approx_count_distinct(df.id).alias("distinct_artists")).show()
     
 def get_distinct_albums(df):
-    return(df.agg(approx_count_distinct(df.id).alias("distinct_albums")).show())
+    '''Get amount of distinct albums'''
+    return df.agg(approx_count_distinct(df.id).alias("distinct_albums")).show()
 
 def get_distinct_genres(df):
-    return(df.agg(approx_count_distinct(df.genre).alias("distinct_genres")).show())
+    '''Get amount of distinct genres'''
+    return df.agg(approx_count_distinct(df.genre).alias("distinct_genres")).show()
 
 def get_distinct_countries(df):
-    return(df.agg(approx_count_distinct(df.country).alias("distinct_countries")).show())
+    '''Get amount of distinct countries'''
+    return df.agg(approx_count_distinct(df.country).alias("distinct_countries")).show()
 
 def min_year_of_pub(df):
-    return(df.agg(min(df.year_of_pub)).show())
+    '''Get oldest year of publication'''
+    return df.agg(min(df.year_of_pub)).show()
 
 def max_year_of_pub(df):
+    '''Get latest year of publication'''
     return(df.agg(max(df.year_of_pub)).show())
 
 def min_year_of_birth(df):
+    '''Get oldest year of birth'''
     return(df.agg(min(df.year_of_birth)).show())
 
 def max_year_of_birth(df):
+    '''Get youngest year of birth'''
     return(df.agg(max(df.year_of_birth)).show())
 
 def task_10():
