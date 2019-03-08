@@ -1,7 +1,8 @@
 '''This module does data aggregation using spark'''
 from operator import add
 from pyspark import SparkConf, SparkContext
-# from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
 
 
 CONF = SparkConf().setAppName("main").setMaster("local[*]")
@@ -168,17 +169,46 @@ def average_artist_critic_norway(album_rdd, artist_rdd):
            .join(artists)
            .reduceByKey(lambda a, b: (a[0] + b[0], a[1]))
            .join(point)
-           .mapValues(list)
            .map(lambda t: [t[1][0][1], "Norway", t[1][0][0]/t[1][1]])
            .collect())
 
-'''SPARK = SparkSession.builder \
-  .master("local") \
-  .appName("Stuff") \
-  .getOrCreate()
+SPARK = SparkSession.builder.config(conf=CONF).getOrCreate()
 
-ARTIST_DATAFRAME = SPARK.createDataFrame(ARTIST_RDD)
+ALBUM_DF = SPARK.createDataFrame(ALBUM_RDD)
+ARTIST_DF = SPARK.createDataFrame(ARTIST_RDD)
 
 # Task 10
 def get_distict_artists(df):
-    return df.collect()'''
+    return(df.agg(approx_count_distinct(df.id).alias("distinct_artists")).show())
+    
+def get_distinct_albums(df):
+    return(df.agg(approx_count_distinct(df.id).alias("distinct_albums")).show())
+
+def get_distinct_genres(df):
+    return(df.agg(approx_count_distinct(df.genre).alias("distinct_genres")).show())
+
+def get_distinct_countries(df):
+    return(df.agg(approx_count_distinct(df.country).alias("distinct_countries")).show())
+
+def min_year_of_pub(df):
+    return(df.agg(min(df.year_of_pub)).show())
+
+def max_year_of_pub(df):
+    return(df.agg(max(df.year_of_pub)).show())
+
+def min_year_of_birth(df):
+    return(df.agg(min(df.year_of_birth)).show())
+
+def max_year_of_birth(df):
+    return(df.agg(max(df.year_of_birth)).show())
+
+def task_10():
+    '''Prints out all the results for task 10'''
+    get_distict_artists(ARTIST_DF)
+    get_distinct_albums(ALBUM_DF)
+    get_distinct_genres(ALBUM_DF)
+    get_distinct_countries(ARTIST_DF)
+    min_year_of_pub(ALBUM_DF)
+    max_year_of_pub(ALBUM_DF)
+    min_year_of_birth(ARTIST_DF)
+    max_year_of_birth(ARTIST_DF)
