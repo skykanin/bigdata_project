@@ -1,6 +1,7 @@
 '''This module does data aggregation using spark'''
 from operator import add
 from pyspark import SparkConf, SparkContext
+# from pyspark.sql import SparkSession
 
 
 CONF = SparkConf().setAppName("main").setMaster("local[*]")
@@ -131,7 +132,7 @@ def best_average_critic_and_country(album_rdd, artist_rdd):
 
     return(albums
            .join(artists)
-           .map(lambda t: [t[0], t[1][0][1], t[1][1]])
+           .map(lambda t: [t[1][0][0], t[1][0][1], t[1][1]])
            .collect())
 
 # Task 8
@@ -170,3 +171,14 @@ def average_artist_critic_norway(album_rdd, artist_rdd):
            .mapValues(list)
            .map(lambda t: [t[1][0][1], "Norway", t[1][0][0]/t[1][1]])
            .collect())
+
+'''SPARK = SparkSession.builder \
+  .master("local") \
+  .appName("Stuff") \
+  .getOrCreate()
+
+ARTIST_DATAFRAME = SPARK.createDataFrame(ARTIST_RDD)
+
+# Task 10
+def get_distict_artists(df):
+    return df.collect()'''
