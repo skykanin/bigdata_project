@@ -83,24 +83,23 @@ def rmd_usrs(rdd, user="tmj_bos_hr", k=3):
            .join(union_rows) #(user, ((word, [tweet_words]), {tweet_words_union_set}))
            .reduceByKey(lambda a, b:
                         min(freq(a[0][0], a[0][1]), freq(a[0][0], queried_user_words))
-                        + min(freq(b[0][0], b[0][1]), freq(b[0][0], queried_user_words)))
+                        + min(freq(b[0][0], b[0][1]), freq(b[0][0], queried2_user_words)))
            .take(k))
            #.coalesce(1)
            #.saveAsTextFile("result/tweets"))
 
-
-def rmd_usrs2(rdd, user="tmj_bos_hr", k=3):
+def rmd_usrs2(rdd=TWITTER_RDD, user="tmj_bos_hr", k=3):
     '''Returns list of recommended users'''
 
     queried_user_tweets = get_user_words(rdd, user) #[queried_user_tweet_words]
-
+    
     return(rdd
            .filter(lambda row: not row[0] == user)
            .mapValues(lambda s: s.split())
            .reduceByKey(lambda a, b: a + b) #(user, [tweet_words])
-           .mapValues(lambda l: sim_score(queried_user_tweets, l))
+           .mapValues(lambda l: sim_score(queried_user_tweets, l)) #(user, sim_score)
            .sortByKey()
-           .takeOrdered(k, key=lambda t: t[1]))
+           .takeOrdered(k, key=lambda t: -t[1]))
 
 def intern_rdd(rdd, user):
     '''Return touple of user and list of tweet words'''
@@ -130,10 +129,11 @@ def recommended_users(user, k, file_path, output_file):
     twitter_headers = ["user", "tweet_text"]
     twitter_rdd = sc.textFile(file_path).map(lambda line: split_and_map(line, twitter_headers))
 
-
 def main(argv):
     '''Main function'''
     print(argv)
+    my_dict = {argv[2]:argv[3], argv[4]:argv[5], argv[6]:argv[7], argv[8]:argv[9]}
+    rmd_usrs2(my_dict["-user"], my_dict=["-k"], my_dict["-file"], my_dict["-output"])
 
 if __name__ == "__main__":
     main(sys.argv)
