@@ -2,6 +2,7 @@
 import sys
 from functools import reduce
 from pyspark import SparkConf, SparkContext
+from operator import concat
 
 CONF = SparkConf() \
   .setAppName("main") \
@@ -88,7 +89,7 @@ def rmd_usrs(rdd, user="tmj_bos_hr", k=3):
            #.coalesce(1)
            #.saveAsTextFile("result/tweets"))
 
-def rmd_usrs2(rdd=TWITTER_RDD, user="tmj_bos_hr", k=3):
+def rmd_usrs2(rdd=TWITTER_RDD, user="tmj_bos_hr", k=5):
     '''Returns list of recommended users'''
 
     queried_user_tweets = get_user_words(rdd, user) #[queried_user_tweet_words]
@@ -97,9 +98,12 @@ def rmd_usrs2(rdd=TWITTER_RDD, user="tmj_bos_hr", k=3):
            .filter(lambda row: not row[0] == user)
            .mapValues(lambda s: s.split())
            .reduceByKey(lambda a, b: a + b) #(user, [tweet_words])
-           .mapValues(lambda l: sim_score(queried_user_tweets, l)) #(user, sim_score)
-           .sortByKey()
-           .takeOrdered(k, key=lambda t: -t[1]))
+           .map(lambda t: (sim_score(queried_user_tweets, t[1]), t[0])) #(sim_score, user)
+           #.sortByKey()
+           .reduceByKey(lambda a, b: a + ' ' + b)
+           .mapValues(lambda s: sorted(s.split())) #(sim_score, [users])
+           .flatMapValues(lambda v: v) # (sim_score, user)
+           .takeOrdered(k, key=lambda t: -t[0]))
 
 def intern_rdd(rdd, user):
     '''Return touple of user and list of tweet words'''
@@ -132,8 +136,9 @@ def recommended_users(user, k, file_path, output_file):
 def main(argv):
     '''Main function'''
     print(argv)
-    my_dict = {argv[2]:argv[3], argv[4]:argv[5], argv[6]:argv[7], argv[8]:argv[9]}
-    rmd_usrs2(my_dict["-user"], my_dict=["-k"], my_dict["-file"], my_dict["-output"])
+    my_dict = {argv[1]:argv[2], argv[3]:argv[4], argv[5]:argv[6], argv[7]:argv[8]}
+    #rmd_usrs2(my_dict["-user"], my_dict=["-k"], my_dict["-file"], my_dict["-output"])
 
-if __name__ == "__main__":
-    main(sys.argv)
+'''if __name__ == "__main__":
+    main(sys.argv)'''
+    
