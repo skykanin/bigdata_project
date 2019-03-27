@@ -71,9 +71,9 @@ def rmd_usrs2(rdd, user="tmj_bos_hr", k=10):
               .mapValues(lambda s: s.split())
               .reduceByKey(lambda a, b: a + b) #(user, [tweet_words])
               .map(lambda t: (sim_score(queried_user_tweets, t[1]), t[0])) #(sim_score, user)
-              .reduceByKey(lambda a, b: a + ' ' + b)
+              .reduceByKey(lambda a, b: a + ' ' + b) #(sim_score, users_string)
               .mapValues(lambda s: sorted(s.split())) #(sim_score, [users])
-              .flatMapValues(identity) # (sim_score, user)
+              .flatMapValues(identity) #(sim_score, user)
               .takeOrdered(k, key=lambda t: -t[0]))
 
     return map(lambda t: (t[1], t[0]), result)
