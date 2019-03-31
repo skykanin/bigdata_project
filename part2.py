@@ -1,6 +1,5 @@
 '''This module does data aggregation using spark on tweets'''
 import sys
-from functools import reduce
 from pyspark import SparkConf, SparkContext
 
 def split_to_touple(line):
@@ -58,10 +57,9 @@ def get_user_words(rdd, user):
         return(step
                .values()
                .flatMap(lambda val: val.split()) #[user_words]
-               #.distinct()
                .collect())
 
-def rmd_usrs2(rdd, user="tmj_bos_hr", k=10):
+def rmd_usrs(rdd, user="tmj_bos_hr", k=10):
     '''Returns list of recommended users'''
 
     queried_user_tweets = get_user_words(rdd, user) #[queried_user_tweet_words]
@@ -86,15 +84,14 @@ def main(argv):
       .setExecutorEnv('spark.driver.memory', '5g') \
       .setExecutorEnv('spark.executor.memory', '3g')
     SC = SparkContext(conf=CONF)
-    
+
     my_dict = {argv[1]:argv[2], argv[3]:argv[4], argv[5]:argv[6], argv[7]:argv[8]}
-    
+
     my_rdd = SC.textFile(my_dict["-file"]).map(split_to_touple)
-        
-    result = rmd_usrs2(rdd=my_rdd, user=my_dict["-user"], k=int(my_dict["-k"]))
-    
+
+    result = rmd_usrs(rdd=my_rdd, user=my_dict["-user"], k=int(my_dict["-k"]))
+
     write_result_to_file(result, my_dict["-output"])
 
 if __name__ == "__main__":
     main(sys.argv)
-    
