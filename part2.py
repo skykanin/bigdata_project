@@ -7,8 +7,6 @@ def split_to_touple(line):
     line_list = line.split('\t')
     return (line_list[0], line_list[1])
 
-# TWITTER_RDD = SC.textFile("data/tweets_small.tsv").map(split_to_touple)
-
 # Define helper functions for manipulating data and writing to file
 
 def identity(a):
@@ -30,10 +28,10 @@ def write_result_to_file(data, filename, deep=True):
     else:
         str_list = list(map(str, data))
 
-    with open('result/{}'.format(filename), 'w') as f:
+    with open('{}'.format(filename), 'w') as f:
         f.write('\n'.join(str_list))
     print("File has been written")
-    
+
 def freq(word, tweet_words):
     '''Takes user x's total amount of tweets and a set of the
     union of words between user x and y, then returns the frequency'''
@@ -76,6 +74,23 @@ def rmd_usrs(rdd, user="tmj_bos_hr", k=10):
 
     return map(lambda t: (t[1], t[0]), result)
 
+def rmd_usrs2(rdd, user="tmj_bos_hr", k=10):
+    '''Returns list of recommended users'''
+    common = (rdd
+              .map(lambda x: (x[0], x[1].split(" "))) # split sentence into words
+              .flatMapValues(identity) # flapmap to get user combined with each word
+              .map(lambda x: ((x[0], x[1]), 1)) # assign count to each word
+              .reduceByKey(lambda x, y: x + y)) # aggregate count on each word
+
+    count_main = common.filter(lambda x: x[0][0] == user).map(lambda x: (x[0][1], (x[1], x[0][0])))
+    count_others = common.filter(lambda x: x[0][0] != user).map(lambda x: (x[0][1], (x[1], x[0][0])))
+
+    return(count_main
+           .join(count_others) # join on common word
+           .map(lambda x: (x[1][1][1], min(x[1][0][0], x[1][1][0]))) # find minimum
+           .reduceByKey(lambda x, y: x + y).sortByKey(True).sortBy(lambda x: -x[1]) #sum min to get sim score and sort by descending
+           .take(k)) # return k top recommended users
+
 def main(argv):
     '''Main function'''
     CONF = SparkConf() \
@@ -89,7 +104,9 @@ def main(argv):
 
     my_rdd = SC.textFile(my_dict["-file"]).map(split_to_touple)
 
-    result = rmd_usrs(rdd=my_rdd, user=my_dict["-user"], k=int(my_dict["-k"]))
+    result = rmd_usrs2(rdd=my_rdd, user=my_dict["-user"], k=int(my_dict["-k"]))
+
+    print(result)
 
     write_result_to_file(result, my_dict["-output"])
 
