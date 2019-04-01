@@ -76,14 +76,19 @@ def rmd_usrs(rdd, user="tmj_bos_hr", k=10):
 
 def rmd_usrs2(rdd, user="tmj_bos_hr", k=10):
     '''Returns list of recommended users'''
-    common = (rdd
-              .map(lambda x: (x[0], x[1].split(" "))) # split sentence into words
-              .flatMapValues(identity) # flapmap to get user combined with each word
-              .map(lambda x: ((x[0], x[1]), 1)) # assign count to each word
-              .reduceByKey(lambda x, y: x + y)) # aggregate count on each word
+    user_words = (rdd
+                  .map(lambda x: (x[0], x[1].split(" "))) # split sentence into words
+                  .flatMapValues(identity) # flapmap to get user combined with each word
+                  .map(lambda x: ((x[0], x[1]), 1)) # assign count to each word
+                  .reduceByKey(lambda x, y: x + y)) # aggregate count on each word
 
-    count_main = common.filter(lambda x: x[0][0] == user).map(lambda x: (x[0][1], (x[1], x[0][0])))
-    count_others = common.filter(lambda x: x[0][0] != user).map(lambda x: (x[0][1], (x[1], x[0][0])))
+    # filter words for main user and others, then make word the key
+    count_main = (user_words
+                  .filter(lambda x: x[0][0] == user)
+                  .map(lambda x: (x[0][1], (x[1], x[0][0]))))
+    count_others = (user_words
+                    .filter(lambda x: x[0][0] != user)
+                    .map(lambda x: (x[0][1], (x[1], x[0][0]))))
 
     return(count_main
            .join(count_others) # join on common word
